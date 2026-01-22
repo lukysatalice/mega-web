@@ -67,7 +67,7 @@ button {
 <button onclick="build('factory')">🏭 Továrna (250)</button>
 <button onclick="build('park')">🌳 Park (80)</button>
 <button onclick="build('hospital')">🏥 Nemocnice (300)</button>
-<button onclick="build('school')">🎓 Škola (200) </button>
+<button onclick="build('school')">🎓 Škola (200)</button>
 
 <h3>Ovládání</h3>
 <button onclick="changeTax(-5)">➖ Daně</button>
@@ -77,33 +77,38 @@ button {
 <div class="log" id="log"></div>
 
 <script>
-let year=1, people=12, happiness=70, money=600, energy=30;
-let tax=10, education=0, hospitals=0;
+let year = 1;
+let people = 12, happiness = 70, money = 600, energy = 30;
+let tax = 10, education = 0, hospitals = 0;
 
-const yearEl=year=document.getElementById("year");
-const peopleEl=document.getElementById("people");
-const happinessEl=document.getElementById("happiness");
-const moneyEl=document.getElementById("money");
-const energyEl=document.getElementById("energy");
-const educationEl=document.getElementById("education");
-const taxEl=document.getElementById("tax");
-const hospitalEl=document.getElementById("hospital");
+const yearEl = document.getElementById("year");
+const peopleEl = document.getElementById("people");
+const happinessEl = document.getElementById("happiness");
+const moneyEl = document.getElementById("money");
+const energyEl = document.getElementById("energy");
+const educationEl = document.getElementById("education");
+const taxEl = document.getElementById("tax");
+const hospitalEl = document.getElementById("hospital");
 
-function log(t){const l=document.getElementById("log");l.innerHTML+=t+"<br>";l.scrollTop=l.scrollHeight;}
+function log(t){
+    const l = document.getElementById("log");
+    l.innerHTML += t + "<br>";
+    l.scrollTop = l.scrollHeight;
+}
 
 function update(){
-    yearEl.textContent=year;
-    peopleEl.textContent=people;
-    happinessEl.textContent=happiness+"%";
-    moneyEl.textContent=money;
-    energyEl.textContent=energy;
-    educationEl.textContent=education;
-    taxEl.textContent=tax+"%";
-    hospitalEl.textContent=hospitals;
+    yearEl.textContent = year;
+    peopleEl.textContent = people;
+    happinessEl.textContent = happiness + "%";
+    moneyEl.textContent = money;
+    energyEl.textContent = energy;
+    educationEl.textContent = education;
+    taxEl.textContent = tax + "%";
+    hospitalEl.textContent = hospitals;
 }
 
 function build(type){
-    const b={
+    const b = {
         house:{c:100, p:5, h:-2},
         apartment:{c:220, p:12, h:-4},
         plant:{c:150, e:25, h:-5},
@@ -114,50 +119,65 @@ function build(type){
         school:{c:200, edu:5, h:+2}
     }[type];
 
-    if(money<b.c){log("❌ Málo peněz");return;}
-    money-=b.c;
-    people+=b.p||0;
-    energy+=b.e||0;
-    happiness+=b.h||0;
-    education+=b.edu||0;
-    hospitals+=b.hos||0;
+    if(money < b.c){
+        log("❌ Málo peněz");
+        return;
+    }
+
+    money -= b.c;
+    people += b.p || 0;
+    energy += b.e || 0;
+    happiness += b.h || 0;
+    education += b.edu || 0;
+    hospitals += b.hos || 0;
+
     log("🏗️ Postavena budova");
     update();
 }
 
 function event(){
-    const events=[
-        ()=>{log("🎉 Kulturní festival");happiness+=10;},
-        ()=>{log("🌵 Sucho");money-=80;happiness-=5;},
-        ()=>{log("🤒 Epidemie");happiness-=15;people-=hospitals?2:6;},
-        ()=>{log("💹 Ekonomický boom");money+=150;},
-        ()=>{log("🤖 Technologický průlom");education+=5;money+=50;},
-        ()=>{log("⚠️ Blackout");energy-=20;happiness-=10;}
+    const events = [
+        ()=>{ log("🎉 Kulturní festival"); happiness += 10; },
+        ()=>{ log("🌵 Sucho"); money -= 80; happiness -= 5; },
+        ()=>{ log("🤒 Epidemie"); happiness -= 15; people -= hospitals ? 2 : 6; },
+        ()=>{ log("💹 Ekonomický boom"); money += 150; },
+        ()=>{ log("🤖 Technologický průlom"); education += 5; money += 50; },
+        ()=>{ log("⚠️ Blackout"); energy -= 20; happiness -= 10; }
     ];
-    if(Math.random()<0.6) events[Math.floor(Math.random()*events.length)]();
+
+    if(Math.random() < 0.6){
+        events[Math.floor(Math.random() * events.length)]();
+    }
 }
 
 function nextYear(){
     year++;
-    money+=people*tax + education*2;
-    energy-=people*2;
 
-    if(energy<0){happiness-=10;energy=0;log("⚠️ Nedostatek energie");}
-    if(happiness>85) people+=2;
-    if(happiness<40) people-=2;
+    money += people * tax + education * 2;
+    energy -= people * 2;
 
-    happiness-=tax*0.2;
+    if(energy < 0){
+        happiness -= 10;
+        energy = 0;
+        log("⚠️ Nedostatek energie");
+    }
+
+    if(happiness > 85) people += 2;
+    if(happiness < 40) people -= 2;
+
+    happiness -= tax * 0.2;
+
     event();
 
-    happiness=Math.max(0,Math.min(100,happiness));
-    people=Math.max(0,people);
+    happiness = Math.max(0, Math.min(100, happiness));
+    people = Math.max(0, people);
 
-    if(people<=0||happiness<=0){
-        alert("Město zaniklo v roce "+year);
+    if(people <= 0 || happiness <= 0){
+        alert("Město zaniklo v roce " + year);
         location.reload();
     }
 
-    log("📅 Konec roku "+year);
+    log("📅 Konec roku " + year);
     update();
 }
 
@@ -167,3 +187,4 @@ log("🏁 Vítej ve městě");
 
 </body>
 </html>
+
