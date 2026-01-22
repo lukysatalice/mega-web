@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<title>Malé město 2.0</title>
+<title>Malé město 2.1</title>
 <style>
 body {
     background:#1f1f1f;
@@ -39,8 +39,8 @@ button {
 </head>
 <body>
 
-<h1>🏙️ Malé město 2.0</h1>
-<p>Rozšířená simulační hra bez boje</p>
+<h1>🏙️ Malé město 2.1</h1>
+<p>Vyváženější simulace města</p>
 
 <div id="panel">
 <div class="box">
@@ -78,8 +78,12 @@ button {
 
 <script>
 let year = 1;
-let people = 12, happiness = 70, money = 600, energy = 30;
+let people = 12, happiness = 70, money = 600;
 let tax = 10, education = 0, hospitals = 0;
+
+let energy = 0;
+let energyProduction = 0;
+let energyConsumption = 0;
 
 const yearEl = document.getElementById("year");
 const peopleEl = document.getElementById("people");
@@ -101,7 +105,7 @@ function update(){
     peopleEl.textContent = people;
     happinessEl.textContent = happiness + "%";
     moneyEl.textContent = money;
-    energyEl.textContent = energy;
+    energyEl.textContent = energy + " ⚡";
     educationEl.textContent = education;
     taxEl.textContent = tax + "%";
     hospitalEl.textContent = hospitals;
@@ -109,14 +113,14 @@ function update(){
 
 function build(type){
     const b = {
-        house:{c:100, p:5, h:-2},
-        apartment:{c:220, p:12, h:-4},
-        plant:{c:150, e:25, h:-5},
-        solar:{c:180, e:15, h:+2},
-        factory:{c:250, e:-5, h:-8, m:40},
+        house:{c:100, p:5, h:-2, ec:2},
+        apartment:{c:220, p:12, h:-4, ec:5},
+        plant:{c:150, e:30, h:-5},
+        solar:{c:180, e:20, h:+2},
+        factory:{c:250, ec:8, h:-8},
         park:{c:80, h:+10},
-        hospital:{c:300, hos:1, h:+5},
-        school:{c:200, edu:5, h:+2}
+        hospital:{c:300, hos:1, ec:6, h:+5},
+        school:{c:200, edu:5, ec:4, h:+2}
     }[type];
 
     if(money < b.c){
@@ -126,10 +130,12 @@ function build(type){
 
     money -= b.c;
     people += b.p || 0;
-    energy += b.e || 0;
     happiness += b.h || 0;
     education += b.edu || 0;
     hospitals += b.hos || 0;
+
+    energyProduction += b.e || 0;
+    energyConsumption += b.ec || 0;
 
     log("🏗️ Postavena budova");
     update();
@@ -142,7 +148,7 @@ function event(){
         ()=>{ log("🤒 Epidemie"); happiness -= 15; people -= hospitals ? 2 : 6; },
         ()=>{ log("💹 Ekonomický boom"); money += 150; },
         ()=>{ log("🤖 Technologický průlom"); education += 5; money += 50; },
-        ()=>{ log("⚠️ Blackout"); energy -= 20; happiness -= 10; }
+        ()=>{ log("⚠️ Blackout"); energy -= 10; happiness -= 5; }
     ];
 
     if(Math.random() < 0.6){
@@ -154,12 +160,12 @@ function nextYear(){
     year++;
 
     money += people * tax + education * 2;
-    energy -= people * 2;
+
+    energy = energyProduction - (energyConsumption + people);
 
     if(energy < 0){
-        happiness -= 10;
-        energy = 0;
-        log("⚠️ Nedostatek energie");
+        happiness -= 8;
+        log("⚡ Nedostatek energie ve městě");
     }
 
     if(happiness > 85) people += 2;
@@ -181,10 +187,16 @@ function nextYear(){
     update();
 }
 
+function changeTax(v){
+    tax = Math.max(0, Math.min(50, tax + v));
+    update();
+}
+
 update();
 log("🏁 Vítej ve městě");
 </script>
 
 </body>
 </html>
+
 
