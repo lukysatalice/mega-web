@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>❄️ Ski Resort Tycoon</title>
+<style>
+body{
+  background:#0b1a2a;
+  color:#fff;
+  font-family:sans-serif;
+  margin:0;
+  padding:0;
+  text-align:center;
+}
+button{
+  margin:4px;
+  padding:8px 12px;
+  cursor:pointer;
+}
+#topPanel{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+  padding:10px;
+  background:#111;
+}
+.box{
+  border:1px solid #555;
+  padding:10px;
+  font-size:14px;
+}
+.table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:5px;
+}
+.table td, .table th{
+  border:1px solid #555;
+  padding:5px;
+  text-align:center;
+}
+.blue{color:#00f;}
+.red{color:#f00;}
+.black{color:#aaa;}
+.green{color:#0f0;}
+.yellow{color:#ff0;}
+.orange{color:#ffa500;}
+.lift{color:#0ff;}
+.log{
+  height:150px;
+  overflow:auto;
+  border:1px solid #444;
+  margin:10px;
+  padding:8px;
+}
+</style>
+</head>
+<body>
+<h1>❄️ Ski Resort Tycoon</h1>
+
+<!-- Horní panel s oběma tabulkami -->
+<div id="topPanel">
+  <!-- Levá tabulka: barevná počítadla -->
+  <div class="box">
+    <h3>📊 Počítadla</h3>
+    <table class="table">
+      <tr><th>Ukazatel</th><th>Hodnota</th></tr>
+      <tr><td>📅 Rok</td><td class="green" id="year"></td></tr>
+      <tr><td>👥 Návštěvníci</td><td class="yellow" id="people"></td></tr>
+      <tr><td>😊 Spokojenost</td><td class="orange" id="happiness"></td></tr>
+      <tr><td>⏳ Fronty</td><td class="red" id="queues"></td></tr>
+      <tr><td>💰 Peníze</td><td class="green" id="money"></td></tr>
+      <tr><td>🎿 Atraktivita</td><td class="blue" id="attract"></td></tr>
+      <tr><td>🎟️ Skipas</td><td class="yellow" id="price"></td></tr>
+      <tr><td>⭐ Hodnocení</td><td class="orange" id="rating"></td></tr>
+      <tr><td>👷 Zaměstnanci</td><td class="green" id="totalStaff"></td></tr>
+    </table>
+  </div>
+
+  <!-- Pravá tabulka: přehled stavby -->
+  <div class="box">
+    <h3>📋 Přehled</h3>
+    <table class="table">
+      <tr><th>Budova / Typ</th><th>Počet</th></tr>
+      <tr><td class="blue">🔵 Modrá sjezdovka</td><td id="blueSlope"></td></tr>
+      <tr><td class="red">🔴 Červená sjezdovka</td><td id="redSlope"></td></tr>
+      <tr><td class="black">⚫ Černá sjezdovka</td><td id="blackSlope"></td></tr>
+      <tr><td class="lift">🪢 Vlek</td><td id="liftVlek"></td></tr>
+      <tr><td class="lift">🚡 Lanovka 2</td><td id="lift2"></td></tr>
+      <tr><td class="lift">🚡 Lanovka 4</td><td id="lift4"></td></tr>
+      <tr><td class="lift">🚡 Lanovka 6</td><td id="lift6"></td></tr>
+      <tr><td class="lift">🚠 Kabinka</td><td id="gondola"></td></tr>
+      <tr><td>🏨 Hotely</td><td id="hotels"></td></tr>
+      <tr><td>🍽️ Restaurace</td><td id="restaurants"></td></tr>
+      <tr><td>🏢 Zázemí</td><td id="staffBase"></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- Pod tím jsou tlačítka budov a zaměstnanců -->
+<h3>🏗️ Stavba Budov</h3>
+<button onclick="build('blue')">🔵 Modrá (150)</button>
+<button onclick="build('red')">🔴 Červená (250)</button>
+<button onclick="build('black')">⚫ Černá (400)</button><br>
+<button onclick="build('lift')">🪢 Vlek (120)</button>
+<button onclick="build('cable2')">🚡 Lanovka 2 (300)</button>
+<button onclick="build('cable4')">🚡 Lanovka 4 (500)</button>
+<button onclick="build('cable6')">🚡 Lanovka 6 (800)</button>
+<button onclick="build('gondola')">🚠 Kabinka (1200)</button><br>
+<button onclick="build('hotel')">🏨 Hotel (600)</button>
+<button onclick="build('restaurant')">🍽️ Restaurace (200)</button>
+<button onclick="build('staffBase')">🏢 Zázemí (500)</button>
+
+<h3>👷 Zaměstnanci</h3>
+<button onclick="hire('tech')">🔧 Technik (1000)</button>
+<button onclick="hire('cook')">🍳 Kuchař (1000)</button>
+<button onclick="hire('manager')">🧑‍💼 Manažer (1000)</button>
+
+<h3>🎟️ Skipas</h3>
+<button onclick="changePrice(-5)">➖</button>
+<button onclick="changePrice(5)">➕</button>
+
+<br><br>
+<button onclick="nextYear()">⏭️ Další sezóna</button>
+
+<div class="log" id="log"></div>
+
+<script>
+let year=1, people=20, happiness=70, money=800, attract=0, skipassPrice=20, queues=0
+let blueSlope=1, redSlope=1, blackSlope=1
+let liftVlek=2, lift2=1, lift4=1, lift6=0, gondola=0
+let liftCapacity= liftVlek*5 + lift2*10 + lift4*18 + lift6*25 + gondola*40
+let restaurants=0, hotels=0, staffBase=0
+let tech=0, cook=0, manager=0
+let rating=3
+
+const el=id=>document.getElementById(id)
+function log(t){el("log").innerHTML+=t+"<br>"; el("log").scrollTop=el("log").scrollHeight}
+
+function update(){
+  let totalStaff=tech+cook+manager
+  // Levá tabulka
+  el("year").textContent=year
+  el("people").textContent=people
+  el("happiness").textContent=happiness+"%"
+  el("money").textContent=money
+  el("price").textContent=skipassPrice
+  el("queues").textContent=Math.floor(queues)
+  el("attract").textContent=attract
+  el("rating").textContent=rating+" ⭐"
+  el("totalStaff").textContent=totalStaff
+  // Pravá tabulka
+  el("blueSlope").textContent=blueSlope
+  el("redSlope").textContent=redSlope
+  el("blackSlope").textContent=blackSlope
+  el("liftVlek").textContent=liftVlek
+  el("lift2").textContent=lift2
+  el("lift4").textContent=lift4
+  el("lift6").textContent=lift6
+  el("gondola").textContent=gondola
+  el("restaurants").textContent=restaurants
+  el("hotels").textContent=hotels
+  el("staffBase").textContent=staffBase
+}
+
+function build(type){
+  const b={
+    blue:{cost:150,cap:5}, red:{cost:250,cap:10}, black:{cost:400,cap:15},
+    lift:{cost:120,cap:5}, cable2:{cost:300,cap:10}, cable4:{cost:500,cap:18}, cable6:{cost:800,cap:25}, gondola:{cost:1200,cap:40},
+    hotel:{cost:600}, restaurant:{cost:200}, staffBase:{cost:500}
+  }[type]
+  if(money<b.cost){log("❌ Málo peněz"); return}
+  money-=b.cost
+  switch(type){
+    case "blue": blueSlope++; liftCapacity+=b.cap; break;
+    case "red": redSlope++; liftCapacity+=b.cap; break;
+    case "black": blackSlope++; liftCapacity+=b.cap; break;
+    case "lift": liftVlek++; liftCapacity+=b.cap; break;
+    case "cable2": lift2++; liftCapacity+=b.cap; break;
+    case "cable4": lift4++; liftCapacity+=b.cap; break;
+    case "cable6": lift6++; liftCapacity+=b.cap; break;
+    case "gondola": gondola++; liftCapacity+=b.cap; break;
+    case "hotel": hotels++; break;
+    case "restaurant": restaurants++; break;
+    case "staffBase": staffBase++; break;
+  }
+  log("🏗️ Postaveno "+type)
+  update()
+}
+
+function hire(type){
+  if(money<1000){log("❌ Málo peněz"); return}
+  money-=1000
+  if(type==="tech") tech++
+  if(type==="cook") cook++
+  if(type==="manager") manager++
+  log("👷 Najat "+type)
+  update()
+}
+
+function changePrice(v){
+  skipassPrice=Math.max(5,Math.min(100,skipassPrice+v))
+  log("🎟️ Cena skipasu: "+skipassPrice)
+  update()
+}
+
+function nextYear(){
+  year++
+  let visitors=people + attract + hotels*15
+  let totalLift= liftVlek*5 + lift2*10 + lift4*18 + lift6*25 + gondola*40
+  queues=visitors-totalLift
+  if(queues>0){happiness-=Math.min(25,queues/4)}
+  else{happiness+=3}
+  rating=Math.max(1,Math.min(5,Math.round(happiness/20)))
+  money += Math.floor(visitors*skipassPrice + restaurants*50 + hotels*100)
+  people += Math.floor(attract/5)
+  happiness-=2
+  log("📅 Rok "+year)
+  update()
+}
+
+update()
+log("🏁 Vítej! Horní panel obsahuje dvě barevné tabulky, pod nimi tlačítka.")
+</script>
+</body>
+</html>

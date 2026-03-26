@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Piškvorky 10×10 AI Rychlá</title>
+<style>
+body{margin:0;height:100vh;display:flex;justify-content:center;align-items:center;font-family:Segoe UI;background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);color:white;}
+.container{text-align:center;}
+h1{font-size:36px;margin-bottom:10px;}
+.board{display:grid;grid-template-columns:repeat(10,60px);grid-template-rows:repeat(10,60px);gap:6px;margin:20px auto;}
+.cell{background:rgba(255,255,255,0.1);border-radius:10px;display:flex;justify-content:center;align-items:center;cursor:pointer;transition:0.15s;}
+.cell:hover{transform:scale(1.08);background:rgba(255,255,255,0.18);}
+svg{width:35px;height:35px;}
+line,circle{stroke:white;stroke-width:6;fill:none;stroke-linecap:round;}
+.status{font-size:20px;margin-top:5px;}
+.score{margin-top:10px;}
+button{margin-top:15px;padding:10px 20px;border:none;border-radius:8px;background:#00ffa6;cursor:pointer;font-size:16px;transition:0.2s;}
+button:hover{transform:scale(1.1);}
+@keyframes drawX{from{stroke-dashoffset:80;}to{stroke-dashoffset:0;}}
+@keyframes drawO{from{stroke-dashoffset:188.5;}to{stroke-dashoffset:0;}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Piškvorky 10×10 (4 v řadě)</h1>
+<div class="board" id="board"></div>
+<div class="status" id="status">Hraješ: X</div>
+<div class="score">
+Ty: <span id="pScore">0</span> |
+AI: <span id="aScore">0</span> |
+Remízy: <span id="dScore">0</span>
+</div>
+<button onclick="restart()">Nové kolo</button>
+</div>
+<script>
+const size = 10, need = 4;
+let board = Array(size*size).fill("");
+let gameActive = true;
+let player = "X", ai = "O";
+let pScore = 0, aScore = 0, dScore = 0;
+
+const boardEl = document.getElementById("board");
+const statusEl = document.getElementById("status");
+const pScoreEl = document.getElementById("pScore");
+const aScoreEl = document.getElementById("aScore");
+const dScoreEl = document.getElementById("dScore");
+
+function drawX(){ 
+  return `<svg viewBox="0 0 100 100">
+    <line x1="20" y1="20" x2="80" y2="80" style="stroke-dasharray:80;stroke-dashoffset:80;animation:drawX 0.35s forwards;"/>
+    <line x1="80" y1="20" x2="20" y2="80" style="stroke-dasharray:80;stroke-dashoffset:80;animation:drawX 0.35s forwards;"/>
+  </svg>`;
+}
+
+function drawO(){ 
+  const r = 30;
+  const c = 2*Math.PI*r;
+  return `<svg viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="${r}" style="stroke-dasharray:${c};stroke-dashoffset:${c};animation:drawO 0.35s forwards;"/>
+  </svg>`;
+}
+
+function createBoard(){
+  boardEl.innerHTML="";
+  board.forEach((v,i)=>{
+    let cell=document.createElement("div");
+    cell.className="cell";
+    cell.onclick=()=>playerMove(i);
+    if(v==="X")cell.innerHTML=drawX();
+    if(v==="O")cell.innerHTML=drawO();
+    boardEl.appendChild(cell);
+  });
+}
+
+function playerMove(i){
+  if(!gameActive || board[i]!="") return;
+  board[i]=player;
+  createBoard();
+  if(checkEnd()) return;
+  setTimeout(aiMove,100);
+}
+
+function aiMove(){
+    // 1. vyhraj pokud můžeš
+    for(let i=0;i<board.length;i++){
+        if(board[i]==""){
+            board[i]=ai;
+            if(checkWinner()==ai){createBoard(); checkEnd(); return;}
+            board[i]="";
+        }
+    }
+    // 2. zablokuj hráče
+    for(let i=0;i<board.length;i++){
+        if(board[i]==""){
+            board[i]=player;
+            if(checkWinner()==player){board[i]=ai; createBoard(); checkEnd(); return;}
+            board[i]="";
+        }
+    }
+    // 3. chytrý tah: vyber náhodně kolem kamenů
+    let candidates = [];
+    for(let i=0;i<board.length;i++){
+        if(board[i]!="") continue;
+        let x=i%size, y=Math.floor(i/size);
+        for(let dy=-1;dy<=1;dy++)
+        for(let dx=-1;dx<=1;dx++){
+            if(dx==0 && dy==0) continue;
+            let nx=x+dx, ny=y+dy;
+            if(nx>=0 && ny>=0 && nx<size && ny<size && board[ny*size+nx]!=""){
+                candidates.push(i);
+            }
+        }
+    }
+    if(candidates.length==0){
+        candidates = board.map((v,i)=>v==""?i:null).filter(v=>v!=null);
+    }
+    let move=candidates[Math.floor(Math.random()*candidates.length)];
+    board[move]=ai;
+    createBoard();
+    checkEnd();
+}
+
+function get(x,y){if(x<0||y<0||x>=size||y>=size)return null; return board[y*size+x];}
+
+function checkWinner(){
+  for(let y=0;y<size;y++)
+    for(let x=0;x<size;x++){
+      let p=get(x,y); if(!p) continue;
+      let dirs=[[1,0],[0,1],[1,1],[1,-1]];
+      for(let d of dirs){
+        let ok=true;
+        for(let i=0;i<need;i++){if(get(x+d[0]*i,y+d[1]*i)!=p){ok=false; break;}}
+        if(ok) return p;
+      }
+    }
+  if(board.every(c=>c!="")) return "draw";
+  return null;
+}
+
+function checkEnd(){
+  let w=checkWinner();
+  if(!w) return false;
+  gameActive=false;
+  if(w=="draw"){statusEl.textContent="Remíza 🤝"; dScore++; dScoreEl.textContent=dScore;}
+  else if(w==player){statusEl.textContent="Vyhrál jsi 🎉"; pScore++; pScoreEl.textContent=pScore;}
+  else{statusEl.textContent="Vyhrála AI 🤖"; aScore++; aScoreEl.textContent=aScore;}
+  return true;
+}
+
+function restart(){
+  board=Array(size*size).fill("");
+  gameActive=true;
+  statusEl.textContent="Hraješ: X";
+  createBoard();
+}
+
+createBoard();
+</script>
+</body>
+</html>

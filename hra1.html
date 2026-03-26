@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<title>Malé město 2.2</title>
+<title>Malé město 2.4</title>
 
 <style>
 body{
@@ -49,7 +49,7 @@ font-size:13px;
 
 <body>
 
-<h1>🏙️ Malé město 2.2</h1>
+<h1>🏙️ Malé město 2.4</h1>
 
 <div id="panel">
 
@@ -57,6 +57,7 @@ font-size:13px;
 <b>Rok</b><div id="year"></div>
 👥 Obyvatelé<div id="people"></div>
 😊 Spokojenost<div id="happiness"></div>
+🌍 Turisté<div id="tourists"></div>
 </div>
 
 <div class="box">
@@ -74,19 +75,12 @@ font-size:13px;
 <button onclick="toggleShop()">🛒 Obchod</button>
 
 <div id="shop">
-
 <hr>
-<b>🛍️ Nakupování</b>
-<br>
-
+<b>🛍️ Nakupování</b><br>
 <button onclick="buy('ad')">📢 Reklama (+5 lidí) 120</button>
-
 <button onclick="buy('energy')">🔋 Baterie +20 energie 100</button>
-
 <button onclick="buy('grant')">🏦 Dotace +200 peněz 150</button>
-
 <button onclick="buy('happy')">🎉 Festival +15 spokojenost 90</button>
-
 </div>
 </div>
 
@@ -102,6 +96,11 @@ font-size:13px;
 <button onclick="build('park')">🌳 Park (80)</button>
 <button onclick="build('hospital')">🏥 Nemocnice (300)</button>
 <button onclick="build('school')">🎓 Škola (200)</button>
+
+<!-- TURISMUS -->
+<button onclick="build('hotel')">🏨 Hotel (500)</button>
+<button onclick="build('resort')">🏝️ Resort (1000)</button>
+<button onclick="build('airport')">✈️ Letiště (10000)</button>
 
 <h3>Ovládání</h3>
 
@@ -121,6 +120,8 @@ let tax=10
 let education=0
 let hospitals=0
 
+let tourists=5
+
 let energy=0
 let energyProduction=0
 let energyConsumption=0
@@ -133,6 +134,7 @@ const energyEl=document.getElementById("energy")
 const educationEl=document.getElementById("education")
 const taxEl=document.getElementById("tax")
 const hospitalEl=document.getElementById("hospital")
+const touristsEl=document.getElementById("tourists")
 
 function log(t){
 const l=document.getElementById("log")
@@ -149,18 +151,12 @@ energyEl.textContent=energy+" ⚡"
 educationEl.textContent=education
 taxEl.textContent=tax+"%"
 hospitalEl.textContent=hospitals
+touristsEl.textContent=Math.floor(tourists)
 }
 
 function toggleShop(){
-
 const s=document.getElementById("shop")
-
-if(s.style.display==="none"){
-s.style.display="block"
-}else{
-s.style.display="none"
-}
-
+s.style.display = s.style.display==="none" ? "block" : "none"
 }
 
 function buy(type){
@@ -179,28 +175,12 @@ return
 
 money-=shop.c
 
-if(type==="ad"){
-people+=5
-log("📢 Reklama přivedla nové obyvatele")
-}
-
-if(type==="energy"){
-energyProduction+=20
-log("🔋 Koupena baterie energie")
-}
-
-if(type==="grant"){
-money+=200
-log("🏦 Státní dotace dorazila")
-}
-
-if(type==="happy"){
-happiness+=15
-log("🎉 Festival zvýšil náladu")
-}
+if(type==="ad"){people+=5;log("📢 Reklama přivedla nové obyvatele")}
+if(type==="energy"){energyProduction+=20;log("🔋 Koupena baterie")}
+if(type==="grant"){money+=200;log("🏦 Dotace dorazila")}
+if(type==="happy"){happiness+=15;log("🎉 Festival!")}
 
 update()
-
 }
 
 function build(type){
@@ -213,7 +193,12 @@ solar:{c:180,e:20,h:+2},
 factory:{c:250,ec:8,h:-8},
 park:{c:80,h:+10},
 hospital:{c:300,hos:1,ec:6,h:+5},
-school:{c:200,edu:5,ec:4,h:+2}
+school:{c:200,edu:5,ec:4,h:+2},
+
+hotel:{c:500,t:0.1},
+resort:{c:1000,t:0.2},
+airport:{c:10000,t:0.5,h:-5,ec:15}
+
 }[type]
 
 if(money<b.c){
@@ -230,33 +215,13 @@ hospitals+=b.hos||0
 energyProduction+=b.e||0
 energyConsumption+=b.ec||0
 
+if(b.t){
+tourists += tourists * b.t
+log("🌍 Turistický ruch vzrostl")
+}
+
 log("🏗️ Postavena budova")
 update()
-
-}
-
-function event(){
-
-const events=[
-
-()=>{log("🎉 Kulturní festival");happiness+=10},
-
-()=>{log("🌵 Sucho");money-=80;happiness-=5},
-
-()=>{log("🤒 Epidemie");happiness-=15;people-=hospitals?2:6},
-
-()=>{log("💹 Ekonomický boom");money+=150},
-
-()=>{log("🤖 Technologický průlom");education+=5;money+=50},
-
-()=>{log("⚠️ Blackout");energy-=10;happiness-=5}
-
-]
-
-if(Math.random()<0.6){
-events[Math.floor(Math.random()*events.length)]()
-}
-
 }
 
 function nextYear(){
@@ -265,6 +230,9 @@ year++
 
 money+=people*tax+education*2
 
+// turisté vydělávají
+money+=Math.floor(tourists*5)
+
 energy=energyProduction-(energyConsumption+people)
 
 if(energy<0){
@@ -272,10 +240,16 @@ happiness-=8
 log("⚡ Nedostatek energie")
 }
 
+// růst turistů
+if(happiness>70) tourists+=3
+if(happiness<40) tourists-=2
+
 if(happiness>85)people+=2
 if(happiness<40)people-=2
 
 happiness-=tax*0.2
+
+tourists=Math.max(0,tourists)
 
 event()
 
@@ -288,8 +262,23 @@ location.reload()
 }
 
 log("📅 Konec roku "+year)
-
 update()
+}
+
+function event(){
+
+const events=[
+()=>{log("🎉 Festival");happiness+=10;tourists+=5},
+()=>{log("🌵 Sucho");money-=80;happiness-=5},
+()=>{log("🤒 Epidemie");happiness-=15;people-=hospitals?2:6},
+()=>{log("💹 Boom");money+=150},
+()=>{log("✈️ Turistický boom");tourists+=10},
+()=>{log("⚠️ Blackout");energy-=10;happiness-=5}
+]
+
+if(Math.random()<0.6){
+events[Math.floor(Math.random()*events.length)]()
+}
 
 }
 
