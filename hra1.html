@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<title>Malé město 2.4</title>
+<title>Malé město 2.6 - Transport Update</title>
 
 <style>
 body{
@@ -10,6 +10,7 @@ background:#1f1f1f;
 color:#eee;
 font-family:sans-serif;
 text-align:center;
+padding-bottom: 50px;
 }
 
 button{
@@ -17,6 +18,14 @@ margin:4px;
 padding:8px 12px;
 font-size:14px;
 cursor:pointer;
+border-radius: 4px;
+border: 1px solid #444;
+background: #333;
+color: white;
+}
+
+button:hover{
+background: #444;
 }
 
 #panel{
@@ -24,12 +33,14 @@ display:flex;
 justify-content:center;
 gap:20px;
 margin-top:15px;
+flex-wrap: wrap;
 }
 
 .box{
 border:1px solid #555;
 padding:10px;
 width:190px;
+background: #2a2a2a;
 }
 
 #shop{
@@ -43,13 +54,32 @@ overflow:auto;
 border:1px solid #444;
 padding:8px;
 font-size:13px;
+background: #111;
+max-width: 800px;
+margin-left: auto;
+margin-right: auto;
+}
+
+h3 {
+border-bottom: 1px solid #444;
+display: inline-block;
+padding: 0 20px;
+margin-top: 30px;
+}
+
+.mhd-controls {
+    background: #383838;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    display: inline-block;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🏙️ Malé město 2.4</h1>
+<h1>🏙️ Malé město 2.6</h1>
 
 <div id="panel">
 
@@ -69,44 +99,59 @@ font-size:13px;
 <div class="box">
 💼 Daně<div id="tax"></div>
 🏥 Nemocnice<div id="hospital"></div>
+🚆 Jízdné MHD<div id="ticketPrice"></div>
 
-<br><br>
-
+<br>
 <button onclick="toggleShop()">🛒 Obchod</button>
 
 <div id="shop">
 <hr>
 <b>🛍️ Nakupování</b><br>
-<button onclick="buy('ad')">📢 Reklama (+5 lidí) 120</button>
-<button onclick="buy('energy')">🔋 Baterie +20 energie 100</button>
-<button onclick="buy('grant')">🏦 Dotace +200 peněz 150</button>
-<button onclick="buy('happy')">🎉 Festival +15 spokojenost 90</button>
+<button onclick="buy('ad')">📢 Reklama (120)</button>
+<button onclick="buy('energy')">🔋 Baterie (100)</button>
+<button onclick="buy('grant')">🏦 Dotace (150)</button>
+<button onclick="buy('happy')">🎉 Festival (90)</button>
 </div>
 </div>
 
 </div>
 
-<h3>Budovy</h3>
-
+<h3>🏠 Bydlení, Průmysl a Obchody</h3><br>
 <button onclick="build('house')">🏠 Dům (100)</button>
 <button onclick="build('apartment')">🏢 Bytovka (220)</button>
 <button onclick="build('plant')">⚡ Elektrárna (150)</button>
 <button onclick="build('solar')">☀️ Solární park (180)</button>
 <button onclick="build('factory')">🏭 Továrna (250)</button>
+<button onclick="build('restaurant')">🍕 Restaurace (150)</button>
+<button onclick="build('mall')">🛍️ Obchodní dům (400)</button>
+<button onclick="build('boutique')">👗 Butik (200)</button>
+
+<br>
+<button onclick="build('bus')">🚌 Autobusy (120)</button>
+<button onclick="build('tram')">🚋 Tramvaje (350)</button>
+<button onclick="build('metro')">🚇 Metro (1200)</button>
+<button onclick="build('ship')">🚢 Přívoz/Loď (300)</button>
 <button onclick="build('park')">🌳 Park (80)</button>
+
+<h3>🏥 Veřejné a Turismus</h3><br>
 <button onclick="build('hospital')">🏥 Nemocnice (300)</button>
 <button onclick="build('school')">🎓 Škola (200)</button>
-
-<!-- TURISMUS -->
 <button onclick="build('hotel')">🏨 Hotel (500)</button>
 <button onclick="build('resort')">🏝️ Resort (1000)</button>
 <button onclick="build('airport')">✈️ Letiště (10000)</button>
 
-<h3>Ovládání</h3>
+<h3>⚙️ Ovládání</h3><br>
+<div style="margin-bottom: 10px;">
+    <span>📊 Daně: </span>
+    <button onclick="changeTax(-5)">➖</button>
+    <button onclick="changeTax(5)">➕</button>
+    
+    <span style="margin-left: 20px;">🎫 Jízdné: </span>
+    <button onclick="changeTicket(-2)">📉 Zlevnit</button>
+    <button onclick="changeTicket(2)">📈 Zdražit</button>
+</div>
 
-<button onclick="changeTax(-5)">➖ Daně</button>
-<button onclick="changeTax(5)">➕ Daně</button>
-<button onclick="nextYear()">⏭️ Další rok</button>
+<button onclick="nextYear()" style="background: #2e7d32; font-weight: bold; padding: 12px 24px;">⏭️ Další rok</button>
 
 <div class="log" id="log"></div>
 
@@ -119,9 +164,10 @@ let money=600
 let tax=10
 let education=0
 let hospitals=0
+let mhdLevel=0
+let ticketPrice=10
 
 let tourists=5
-
 let energy=0
 let energyProduction=0
 let energyConsumption=0
@@ -135,6 +181,7 @@ const educationEl=document.getElementById("education")
 const taxEl=document.getElementById("tax")
 const hospitalEl=document.getElementById("hospital")
 const touristsEl=document.getElementById("tourists")
+const ticketEl=document.getElementById("ticketPrice")
 
 function log(t){
 const l=document.getElementById("log")
@@ -145,13 +192,14 @@ l.scrollTop=l.scrollHeight
 function update(){
 yearEl.textContent=year
 peopleEl.textContent=people
-happinessEl.textContent=happiness+"%"
+happinessEl.textContent=Math.floor(happiness)+"%"
 moneyEl.textContent=money
 energyEl.textContent=energy+" ⚡"
 educationEl.textContent=education
 taxEl.textContent=tax+"%"
 hospitalEl.textContent=hospitals
 touristsEl.textContent=Math.floor(tourists)
+ticketEl.textContent=ticketPrice + " Kč"
 }
 
 function toggleShop(){
@@ -160,7 +208,6 @@ s.style.display = s.style.display==="none" ? "block" : "none"
 }
 
 function buy(type){
-
 const shop={
 ad:{c:120},
 energy:{c:100},
@@ -174,17 +221,14 @@ return
 }
 
 money-=shop.c
-
 if(type==="ad"){people+=5;log("📢 Reklama přivedla nové obyvatele")}
 if(type==="energy"){energyProduction+=20;log("🔋 Koupena baterie")}
 if(type==="grant"){money+=200;log("🏦 Dotace dorazila")}
 if(type==="happy"){happiness+=15;log("🎉 Festival!")}
-
 update()
 }
 
 function build(type){
-
 const b={
 house:{c:100,p:5,h:-2,ec:2},
 apartment:{c:220,p:12,h:-4,ec:5},
@@ -194,15 +238,20 @@ factory:{c:250,ec:8,h:-8},
 park:{c:80,h:+10},
 hospital:{c:300,hos:1,ec:6,h:+5},
 school:{c:200,edu:5,ec:4,h:+2},
-
+restaurant:{c:150,h:5,t:0.05,ec:3},
+mall:{c:400,h:8,t:0.1,ec:10},
+boutique:{c:200,h:3,t:0.08,ec:4},
+bus:{c:120,mhd:1,h:2,ec:2},
+tram:{c:350,mhd:3,h:4,ec:6},
+metro:{c:1200,mhd:10,h:10,ec:20},
+ship:{c:300,mhd:2,t:0.1,ec:2},
 hotel:{c:500,t:0.1},
 resort:{c:1000,t:0.2},
 airport:{c:10000,t:0.5,h:-5,ec:15}
-
 }[type]
 
 if(money<b.c){
-log("❌ Málo peněz")
+log("❌ Málo peněz na stavbu")
 return
 }
 
@@ -211,88 +260,90 @@ people+=b.p||0
 happiness+=b.h||0
 education+=b.edu||0
 hospitals+=b.hos||0
-
+mhdLevel+=b.mhd||0
 energyProduction+=b.e||0
 energyConsumption+=b.ec||0
 
-if(b.t){
-tourists += tourists * b.t
-log("🌍 Turistický ruch vzrostl")
+if(b.t) tourists += tourists * b.t
+
+log("🏗️ Postaveno: " + type)
+update()
 }
 
-log("🏗️ Postavena budova")
+function changeTicket(v){
+ticketPrice = Math.max(0, ticketPrice + v)
+log("🎫 Cena jízdného změněna na " + ticketPrice + " Kč")
 update()
 }
 
 function nextYear(){
-
 year++
 
-money+=people*tax+education*2
+let incomeFromTax = people * (tax/2)
+let incomeFromTourism = tourists * 6
+let mhdIncome = mhdLevel * ticketPrice * (people / 10)
+money += Math.floor(incomeFromTax + incomeFromTourism + education*2 + mhdIncome)
 
-// turisté vydělávají
-money+=Math.floor(tourists*5)
+energy = energyProduction - (energyConsumption + Math.floor(people/2))
 
-energy=energyProduction-(energyConsumption+people)
-
-if(energy<0){
-happiness-=8
-log("⚡ Nedostatek energie")
+if(energy < 0){
+happiness -= 10
+log("⚡ Blackout! Nedostatek energie trápí město.")
 }
 
-// růst turistů
-if(happiness>70) tourists+=3
-if(happiness<40) tourists-=2
+if(ticketPrice > 20) {
+    happiness -= 5
+    tourists -= 2
+    log("😠 Lidé si stěžují na drahé jízdné!")
+} else if(ticketPrice < 8 && mhdLevel > 0) {
+    happiness += 5
+    tourists += 5
+    log("❤️ Levná doprava láká lidi i turisty!")
+}
 
-if(happiness>85)people+=2
-if(happiness<40)people-=2
+if(happiness > 70) { tourists += (3 + mhdLevel); people += 2; }
+if(happiness < 40) { tourists -= 5; people -= 3; }
 
-happiness-=tax*0.2
+happiness -= (tax * 0.3) 
+if(mhdLevel > 0) happiness += 2 
 
-tourists=Math.max(0,tourists)
+tourists = Math.max(0, tourists)
+happiness = Math.max(0, Math.min(100, happiness))
+people = Math.max(0, people)
 
-event()
-
-happiness=Math.max(0,Math.min(100,happiness))
-people=Math.max(0,people)
-
-if(people<=0||happiness<=0){
-alert("Město zaniklo v roce "+year)
+if(people <= 0 || happiness <= 0){
+alert("Město zkolabovalo v roce " + year)
 location.reload()
 }
 
-log("📅 Konec roku "+year)
+event()
+log("📅 Rok " + year + " ukončen")
 update()
 }
 
 function event(){
-
 const events=[
-()=>{log("🎉 Festival");happiness+=10;tourists+=5},
-()=>{log("🌵 Sucho");money-=80;happiness-=5},
-()=>{log("🤒 Epidemie");happiness-=15;people-=hospitals?2:6},
-()=>{log("💹 Boom");money+=150},
-()=>{log("✈️ Turistický boom");tourists+=10},
-()=>{log("⚠️ Blackout");energy-=10;happiness-=5}
+()=>{log("🎉 Městské slavnosti"); happiness+=10; tourists+=10},
+()=>{log("🚧 Oprava silnic"); money-=100; happiness-=5},
+()=>{log("🤒 Chřipková sezóna"); happiness-=10; people-=hospitals?1:5},
+()=>{log("📈 Hospodářský růst"); money+=200},
+()=>{log("🚢 Nová lodní linka přivezla turisty"); tourists+=15},
+()=>{log("🤖 Technologický pokrok"); education+=5; energyProduction+=10}
 ]
 
-if(Math.random()<0.6){
-events[Math.floor(Math.random()*events.length)]()
+if(Math.random() < 0.5){
+events[Math.floor(Math.random() * events.length)]()
 }
-
 }
 
 function changeTax(v){
-tax=Math.max(0,Math.min(50,tax+v))
+tax = Math.max(0, Math.min(50, tax+v))
 update()
 }
 
 update()
-log("🏁 Vítej ve městě")
-
+log("🏁 Hra Malé město 2.6 spuštěna!")
 </script>
 
 </body>
 </html>
-
-
