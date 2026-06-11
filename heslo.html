@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaheslovaná stránka</title>
+<link rel="stylesheet" href="heslo.css">
+</head>
+<body>
+<h2>Zadej heslo:</h2>
+ 
+    <input type="password" id="heslo">
+ 
+ 
+    <button onclick="zkontroluj()">Odeslat</button>
+ 
+    <div id="obsah">
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klikací Hra</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .game-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 300px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 20px;
+        }
+
+        .click-btn {
+            background-color: #4af2a1;
+            background-image: linear-gradient(to bottom right, #4af2a1, #2bbd7e);
+            border: none;
+            color: white;
+            padding: 20px 40px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(43, 189, 126, 0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+            width: 100%;
+            outline: none;
+        }
+
+        .click-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 5px rgba(43, 189, 126, 0.4);
+        }
+
+        .upgrade-section {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+        }
+
+        .upgrade-btn {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            color: #333;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .upgrade-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .upgrade-btn:disabled {
+            background-color: #e9ecef;
+            color: #999;
+            cursor: not-allowed;
+            border-color: #ddd;
+        }
+
+        /* Styl pro nové tlačítko vylepšení */
+        #boostUpgrade {
+            background-color: #ff9f43;
+            color: white;
+            border: none;
+            font-weight: bold;
+            display: none; /* Schované, dokud není 5 robotů */
+        }
+
+        #boostUpgrade:hover {
+            background-color: #ee5253;
+        }
+
+        #boostUpgrade:disabled {
+            background-color: #ccc;
+            color: #666;
+        }
+
+        .stats {
+            font-size: 14px;
+            color: #666;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Kliker</h1>
+        <div class="score-display">Skóre: <span id="score">0</span></div>
+        
+        <button class="click-btn" id="clickMe">KLIKNI!</button>
+
+        <div class="upgrade-section">
+            <button class="upgrade-btn" id="buyUpgrade">
+                Koupit stroj (<span id="upgradeCostText">Cena: <span id="upgradeCost">10</span></span>)
+            </button>
+
+            <button class="upgrade-btn" id="boostUpgrade">
+                Vylepšit stroje (Cena: <span id="boostCost">150</span>)
+            </button>
+
+            <div class="stats">
+                Počet strojů: <span id="robotCount">0</span>/5<br>
+                Automatický příjem: <span id="cps">0</span>/s
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Herní stav
+        let score = 0;
+        let autoClickers = 0;
+        let upgradeCost = 10;
+        
+        // Nové proměnné pro vylepšení
+        let clickerPower = 1; // Kolik bodů dává jeden robot za sekundu
+        let boostCost = 150;  // Cena za vylepšení síly robotů
+
+        // DOM Prvky
+        const scoreDisplay = document.getElementById('score');
+        const clickBtn = document.getElementById('clickMe');
+        const upgradeBtn = document.getElementById('buyUpgrade');
+        const upgradeCostDisplay = document.getElementById('upgradeCost');
+        const upgradeCostText = document.getElementById('upgradeCostText');
+        const cpsDisplay = document.getElementById('cps');
+        const robotCountDisplay = document.getElementById('robotCount');
+        
+        // Nové DOM prvky
+        const boostUpgradeBtn = document.getElementById('boostUpgrade');
+        const boostCostDisplay = document.getElementById('boostCost');
+
+        // Funkce pro aktualizaci rozhraní
+        function updateUI() {
+            scoreDisplay.textContent = Math.floor(score);
+            upgradeCostDisplay.textContent = upgradeCost;
+            boostCostDisplay.textContent = boostCost;
+            robotCountDisplay.textContent = autoClickers;
+            
+            // Výpočet celkového příjmu za sekundu
+            let totalCps = autoClickers * clickerPower;
+            cpsDisplay.textContent = totalCps.toFixed(1);
+            
+            // Kontrola limitu robotů (max 5)
+            if (autoClickers >= 5) {
+                upgradeBtn.disabled = true;
+                upgradeCostText.textContent = "Max dosaženo";
+                boostUpgradeBtn.style.display = "block"; // Zobrazí tlačítko vylepšení
+            } else {
+                // Aktivace/deaktivace tlačítka podle financí
+                if (score >= upgradeCost) {
+                    upgradeBtn.disabled = false;
+                } else {
+                    upgradeBtn.disabled = true;
+                }
+            }
+
+            // Aktivace tlačítka na vylepšení strojů podle peněz
+            if (autoClickers >= 5) {
+                if (score >= boostCost) {
+                    boostUpgradeBtn.disabled = false;
+                } else {
+                    boostUpgradeBtn.disabled = true;
+                }
+            }
+        }
+
+        // Kliknutí na hlavní tlačítko
+        clickBtn.addEventListener('click', () => {
+            score += 1;
+            updateUI();
+        });
+
+        // Nákup vylepšení (strojů)
+        upgradeBtn.addEventListener('click', () => {
+            if (score >= upgradeCost && autoClickers < 5) {
+                score -= upgradeCost;
+                autoClickers += 1;
+                // Zvýšení ceny pro další nákup o 50 %
+                upgradeCost = Math.round(upgradeCost * 1.5); 
+                updateUI();
+            }
+        });
+
+        // Nákup vylepšení strojů (Boost)
+        boostUpgradeBtn.addEventListener('click', () => {
+            if (score >= boostCost) {
+                score -= boostCost;
+                clickerPower += 1; // Každý robot teď bude dávat o 1 bod za sekundu víc
+                boostCost = Math.round(boostCost * 2); // Zvýšení ceny vylepšení na dvojnásobek
+                updateUI();
+            }
+        });
+
+        // Smyčka pro automatické generování bodů (běží každých 100ms pro plynulost)
+        setInterval(() => {
+            if (autoClickers > 0) {
+                // Přidá poměrnou část bodů každých 100ms na základě síly robotů
+                score += (autoClickers * clickerPower) / 10; 
+                updateUI();
+            }
+        }, 100);
+
+        // Prvotní vykreslení
+        updateUI();
+  
+
+
+
+    </script>
+</body>
+</html>
+
+   
+    </div>
+ 
+    <script src="script.js"></script>
+</body>
+</html>
